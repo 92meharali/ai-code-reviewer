@@ -10,6 +10,7 @@ from app import __version__
 from app.api.routes import health
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.db.session import close_db, init_db
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Manage application startup and shutdown events."""
     settings = get_settings()
     setup_logging(settings)
+    init_db(settings.database_url)
     logger.info(
         "Starting %s v%s [%s]",
         settings.app_name,
@@ -26,6 +28,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings.environment,
     )
     yield
+    await close_db()
     logger.info("Shutting down %s", settings.app_name)
 
 

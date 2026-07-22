@@ -4,7 +4,7 @@ An AI-powered GitHub application that automatically reviews Pull Requests using 
 
 ## Status
 
-Early development. The backend API skeleton is in place with a health check endpoint and Docker-based local development.
+Early development. The backend API skeleton is in place with Docker-based local development and PostgreSQL persistence.
 
 ## Tech Stack
 
@@ -25,7 +25,9 @@ ai-code-reviewer/
 │   ├── app/
 │   │   ├── api/          # HTTP routes
 │   │   ├── core/         # Config, logging, shared utilities
+│   │   ├── db/           # Database engine, sessions, ORM base
 │   │   └── main.py       # Application entry point
+│   ├── alembic/          # Database migrations
 │   ├── tests/
 │   ├── Dockerfile
 │   ├── requirements.txt
@@ -45,8 +47,11 @@ ai-code-reviewer/
 ### Docker (recommended)
 
 ```bash
-# Start the API with hot reload
+# Start the API and PostgreSQL
 make up
+
+# Apply database migrations
+make migrate
 
 # View logs
 make logs
@@ -54,7 +59,7 @@ make logs
 # Run tests
 make test
 
-# Check health
+# Check health (includes database status)
 make health
 
 # Stop services
@@ -86,7 +91,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 The API will be available at `http://localhost:8000`.
 
-- Health check: `GET /health`
+- Health check: `GET /health` (reports database connectivity)
 - Interactive docs: `http://localhost:8000/docs`
 
 ### Running Tests

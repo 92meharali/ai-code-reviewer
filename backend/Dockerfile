@@ -19,6 +19,8 @@ FROM base AS development
 
 RUN pip install -r requirements-dev.txt
 
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY . .
 
 RUN chown -R appuser:appuser /app
@@ -34,6 +36,8 @@ FROM base AS production
 
 RUN pip install -r requirements.txt
 
+COPY alembic.ini ./
+COPY alembic ./alembic
 COPY app ./app
 
 RUN chown -R appuser:appuser /app

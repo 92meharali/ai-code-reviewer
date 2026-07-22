@@ -24,6 +24,10 @@ class Settings(BaseSettings):
 
     log_level: str = "INFO"
 
+    database_url: str = (
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_code_reviewer"
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

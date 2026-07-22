@@ -1,7 +1,7 @@
 COMPOSE = docker compose
 API_SERVICE = api
 
-.PHONY: help up down restart logs ps build test shell health env
+.PHONY: help up down restart logs ps build test shell health env migrate
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -35,3 +35,6 @@ shell: env ## Open a shell in the API container
 
 health: ## Check API health endpoint
 	@curl -sf http://localhost:$${API_PORT:-8000}/health | python3 -m json.tool
+
+migrate: env ## Apply database migrations
+	$(COMPOSE) run --rm $(API_SERVICE) alembic upgrade head
