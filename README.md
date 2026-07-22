@@ -4,7 +4,7 @@ An AI-powered GitHub application that automatically reviews Pull Requests using 
 
 ## Status
 
-Early development. The backend API skeleton is in place with a health check endpoint.
+Early development. The backend API skeleton is in place with a health check endpoint and Docker-based local development.
 
 ## Tech Stack
 
@@ -27,8 +27,11 @@ ai-code-reviewer/
 │   │   ├── core/         # Config, logging, shared utilities
 │   │   └── main.py       # Application entry point
 │   ├── tests/
+│   ├── Dockerfile
 │   ├── requirements.txt
 │   └── requirements-dev.txt
+├── docker-compose.yml
+├── Makefile
 └── README.md
 ```
 
@@ -36,10 +39,33 @@ ai-code-reviewer/
 
 ### Prerequisites
 
-- Python 3.11+
-- pip
+- Docker and Docker Compose (recommended), or
+- Python 3.11+ and pip
 
-### Backend
+### Docker (recommended)
+
+```bash
+# Start the API with hot reload
+make up
+
+# View logs
+make logs
+
+# Run tests
+make test
+
+# Check health
+make health
+
+# Stop services
+make down
+```
+
+The API will be available at `http://localhost:8000`.
+
+Run `make help` to see all available commands.
+
+### Backend (without Docker)
 
 ```bash
 cd backend
@@ -64,6 +90,14 @@ The API will be available at `http://localhost:8000`.
 - Interactive docs: `http://localhost:8000/docs`
 
 ### Running Tests
+
+With Docker:
+
+```bash
+make test
+```
+
+Without Docker:
 
 ```bash
 cd backend
