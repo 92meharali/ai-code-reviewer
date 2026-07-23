@@ -4,7 +4,7 @@ An AI-powered GitHub application that automatically reviews Pull Requests using 
 
 ## Status
 
-Early development. The backend API skeleton is in place with Docker-based local development and PostgreSQL persistence.
+Early development. The backend includes PostgreSQL persistence, a User model, and development-only internal CRUD endpoints.
 
 ## Tech Stack
 
@@ -26,6 +26,9 @@ ai-code-reviewer/
 │   │   ├── api/          # HTTP routes
 │   │   ├── core/         # Config, logging, shared utilities
 │   │   ├── db/           # Database engine, sessions, ORM base
+│   │   ├── models/       # SQLAlchemy ORM models
+│   │   ├── repositories/ # Data access layer
+│   │   ├── schemas/      # Pydantic request/response models
 │   │   └── main.py       # Application entry point
 │   ├── alembic/          # Database migrations
 │   ├── tests/
@@ -69,6 +72,20 @@ make down
 The API will be available at `http://localhost:8000`.
 
 Run `make help` to see all available commands.
+
+#### Internal user endpoints (development only)
+
+After `make up` and `make migrate`, you can verify user CRUD:
+
+```bash
+# Create a user
+curl -X POST http://localhost:8000/internal/users \
+  -H "Content-Type: application/json" \
+  -d '{"github_id": 12345, "username": "octocat", "email": "octocat@github.com"}'
+
+# List users
+curl http://localhost:8000/internal/users
+```
 
 ### Backend (without Docker)
 

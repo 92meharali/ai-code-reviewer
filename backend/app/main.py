@@ -45,6 +45,11 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router)
 
+    if settings.environment == "development":
+        from app.api.routes.internal import users as internal_users
+
+        app.include_router(internal_users.router, prefix="/internal")
+
     return app
 
 
