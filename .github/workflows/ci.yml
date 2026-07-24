@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Build, Migrate, and Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare environment file
+        run: cp backend/.env.example backend/.env
+
+      - name: Build development image
+        run: docker compose build api
+
+      - name: Build production image
+        run: docker build --target production -t ai-code-reviewer-api:prod ./backend
+
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait db
+
+      - name: Run database migrations
+        run: docker compose run --rm api alembic upgrade head
+
+      - name: Run tests
+        run: docker compose run --rm --no-deps api pytest -v --tb=short
+
+      - name: Stop services
+        if: always()
+        run: docker compose down -v

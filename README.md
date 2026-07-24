@@ -1,10 +1,12 @@
 # AI Code Reviewer
 
+![CI](https://github.com/92meharali/ai-code-reviewer/actions/workflows/ci.yml/badge.svg)
+
 An AI-powered GitHub application that automatically reviews Pull Requests using Large Language Models.
 
 ## Status
 
-Early development. The backend includes PostgreSQL persistence, a User model, and development-only internal CRUD endpoints.
+Early development. The backend includes PostgreSQL persistence, a User model, development-only internal CRUD endpoints, and GitHub Actions CI.
 
 ## Tech Stack
 
@@ -37,6 +39,7 @@ ai-code-reviewer/
 │   └── requirements-dev.txt
 ├── docker-compose.yml
 ├── Makefile
+├── .github/workflows/ci.yml
 └── README.md
 ```
 
@@ -125,6 +128,17 @@ Without Docker:
 cd backend
 pytest -v
 ```
+
+## Continuous Integration
+
+Every push and pull request to `main` triggers the CI workflow:
+
+1. Build development and production Docker images
+2. Start PostgreSQL
+3. Run Alembic migrations
+4. Execute the pytest suite
+
+Workflow file: `.github/workflows/ci.yml`
 
 ## License
 
