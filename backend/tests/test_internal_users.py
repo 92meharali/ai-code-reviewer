@@ -1,6 +1,6 @@
 """Tests for internal user CRUD endpoints."""
 
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 
 import pytest
 from fastapi.testclient import TestClient
