@@ -7,7 +7,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.api.routes.auth import OAUTH_STATE_COOKIE
+from app.api.routes.auth import OAUTH_STATE_COOKIE, get_github_oauth_service
 from app.core.config import Settings, get_settings
 from app.db.base import Base
 from app.db.session import get_db
@@ -31,8 +31,8 @@ def oauth_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
-def client_with_db(oauth_env: None) -> Iterator[TestClient]:
-    """Provide a test client with an in-memory database."""
+def app_with_db(oauth_env: None) -> Iterator:
+    """Provide an application instance backed by an in-memory database."""
     import asyncio
 
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
@@ -56,16 +56,22 @@ def client_with_db(oauth_env: None) -> Iterator[TestClient]:
     app = create_app()
     app.dependency_overrides[get_db] = override_get_db
 
-    with TestClient(app) as test_client:
-        yield test_client
+    yield app
 
     app.dependency_overrides.clear()
     asyncio.run(engine.dispose())
 
 
 @pytest.fixture
-def mock_github_oauth(monkeypatch: pytest.MonkeyPatch) -> GitHubOAuthService:
-    """Provide a mocked GitHub OAuth service."""
+def client_with_db(app_with_db) -> Iterator[TestClient]:
+    """Provide a test client with an in-memory database."""
+    with TestClient(app_with_db) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def mock_github_oauth(app_with_db) -> GitHubOAuthService:
+    """Provide a mocked GitHub OAuth service via dependency overrides."""
     service = GitHubOAuthService(
         Settings(
             github_client_id="test-client-id",
@@ -82,17 +88,11 @@ def mock_github_oauth(monkeypatch: pytest.MonkeyPatch) -> GitHubOAuthService:
             avatar_url="https://avatars.githubusercontent.com/u/424242",
         )
     )
-    monkeypatch.setattr(
-        "app.api.routes.auth.get_github_oauth_service",
-        lambda: service,
-    )
+    app_with_db.dependency_overrides[get_github_oauth_service] = lambda: service
     return service
 
 
-def test_github_login_redirects_to_github(
-    client_with_db: TestClient,
-    oauth_env: None,
-) -> None:
+def test_github_login_redirects_to_github(client_with_db: TestClient) -> None:
     """GET /auth/github should redirect to GitHub and set the state cookie."""
     response = client_with_db.get("/auth/github", follow_redirects=False)
 
@@ -104,17 +104,19 @@ def test_github_login_redirects_to_github(
 
 
 def test_github_login_returns_503_when_not_configured(
-    client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """GET /auth/github should fail when OAuth credentials are missing."""
     monkeypatch.delenv("GITHUB_CLIENT_ID", raising=False)
     monkeypatch.delenv("GITHUB_CLIENT_SECRET", raising=False)
+    monkeypatch.delenv("GITHUB_OAUTH_REDIRECT_URI", raising=False)
     get_settings.cache_clear()
 
-    response = client.get("/auth/github", follow_redirects=False)
+    with TestClient(create_app()) as client:
+        response = client.get("/auth/github", follow_redirects=False)
 
     assert response.status_code == 503
+    get_settings.cache_clear()
 
 
 def test_github_callback_creates_user(
@@ -191,9 +193,7 @@ def test_github_callback_rejects_invalid_state(
     assert response.json()["detail"] == "Invalid OAuth state"
 
 
-def test_github_callback_returns_github_error(
-    client_with_db: TestClient,
-) -> None:
+def test_github_callback_returns_github_error(client_with_db: TestClient) -> None:
     """Callback should surface GitHub authorization errors."""
     response = client_with_db.get(
         "/auth/github/callback",
