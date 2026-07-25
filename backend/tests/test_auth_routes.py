@@ -205,4 +205,4 @@ def test_github_callback_returns_github_error(client_with_db: TestClient) -> Non
     )
 
     assert response.status_code == 400
-    assert "access_denied" in response.json()["detail"]
+    assert response.json()["detail"] == "GitHub OAuth error: The user denied access"
