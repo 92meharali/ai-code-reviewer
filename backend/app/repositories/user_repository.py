@@ -54,3 +54,28 @@ class UserRepository:
         """Delete a user record."""
         await self._session.delete(user)
         await self._session.flush()
+
+    async def upsert_from_github(
+        self,
+        *,
+        github_id: int,
+        username: str,
+        email: str | None = None,
+        avatar_url: str | None = None,
+    ) -> User:
+        """Create or update a user from GitHub profile data."""
+        user = await self.get_by_github_id(github_id)
+        if user is None:
+            return await self.create(
+                github_id=github_id,
+                username=username,
+                email=email,
+                avatar_url=avatar_url,
+            )
+
+        user.username = username
+        user.email = email
+        user.avatar_url = avatar_url
+        await self._session.flush()
+        await self._session.refresh(user)
+        return user

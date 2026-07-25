@@ -28,6 +28,13 @@ class Settings(BaseSettings):
         "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_code_reviewer"
     )
 
+    github_client_id: str = ""
+    github_client_secret: str = ""
+    github_oauth_redirect_uri: str = (
+        "http://localhost:8000/auth/github/callback"
+    )
+    github_oauth_scopes: str = "read:user user:email"
+
 
 @lru_cache
 def get_settings() -> Settings:

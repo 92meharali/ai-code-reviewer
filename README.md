@@ -6,7 +6,7 @@ An AI-powered GitHub application that automatically reviews Pull Requests using 
 
 ## Status
 
-Early development. The backend includes PostgreSQL persistence, a User model, development-only internal CRUD endpoints, and GitHub Actions CI.
+Early development. The backend includes PostgreSQL persistence, a User model, GitHub OAuth login, development-only internal CRUD endpoints, and GitHub Actions CI.
 
 ## Tech Stack
 
@@ -31,6 +31,7 @@ ai-code-reviewer/
 │   │   ├── models/       # SQLAlchemy ORM models
 │   │   ├── repositories/ # Data access layer
 │   │   ├── schemas/      # Pydantic request/response models
+│   │   ├── services/     # External integrations (GitHub OAuth)
 │   │   └── main.py       # Application entry point
 │   ├── alembic/          # Database migrations
 │   ├── tests/
@@ -89,6 +90,22 @@ curl -X POST http://localhost:8000/internal/users \
 # List users
 curl http://localhost:8000/internal/users
 ```
+
+### GitHub OAuth
+
+1. Create a GitHub OAuth App at [https://github.com/settings/developers](https://github.com/settings/developers)
+2. Set the callback URL to `http://localhost:8000/auth/github/callback`
+3. Add credentials to `backend/.env`:
+
+```bash
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+GITHUB_OAUTH_REDIRECT_URI=http://localhost:8000/auth/github/callback
+```
+
+4. Start the API and open `http://localhost:8000/auth/github` in your browser
+
+On success, `/auth/github/callback` returns the authenticated user as JSON and upserts the record in the database.
 
 ### Backend (without Docker)
 

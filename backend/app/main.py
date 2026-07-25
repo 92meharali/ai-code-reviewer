@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 
 from app import __version__
-from app.api.routes import health
+from app.api.routes import auth, health
 from app.core.config import get_settings
 from app.core.logging import setup_logging
 from app.db.session import close_db, init_db
@@ -44,6 +44,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(auth.router)
 
     if settings.environment == "development":
         from app.api.routes.internal import users as internal_users
